@@ -19,15 +19,11 @@ namespace HospitalSystemFix.Windows
         {
             if (string.IsNullOrWhiteSpace(txtFullName.Text))
             {
-                new MaterialSnackBar("Помилка: Введіть ПІБ!", "ОК", true).Show(this);
+                new MaterialSnackBar("Error: Enter Full Name!", "OK", true).Show(this);
                 return;
             }
 
-            NewDoctor = new Doctor
-            {
-                FullName = txtFullName.Text,
-                Specialty = "Загальна практика" 
-            };
+            NewDoctor = new Doctor(txtFullName.Text, "General Practice");
 
             this.DialogResult = DialogResult.OK;
             this.Close();

@@ -36,8 +36,8 @@ namespace HospitalSystemFix
             materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
             materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey800, Primary.BlueGrey900, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
 
-            DoctorList.Columns.Add("ПІБ Лікаря", 200);
-            PatientList.Columns.Add("ПІБ Пацієнта", 200);
+            DoctorList.Columns.Add("Doctor Name", 200);
+            PatientList.Columns.Add("Patient Name", 200);
 
             EventHandler viewPatientsDel = new EventHandler(ViewPatientsByDoctor);
             EventHandler viewDoctorsDel = new EventHandler(ViewDoctorsByPatient);
@@ -52,21 +52,26 @@ namespace HospitalSystemFix
             ConnectButton.Click += connectDel;
             ResetLists.Click += resetDel;
             ResetLists.Click += exampleDelegat;
-            
+
             LoadData();
         }
+
         private void exampleDelegateSnackBar(object? sender, EventArgs e)
         {
-            new MaterialSnackBar("Тестуємо", "ОК", true).Show(this);
+            new MaterialSnackBar("Testing Delegate", "OK", true).Show(this);
         }
+
         private void btnOpenAddDoctor_Click(object? sender, EventArgs e)
         {
             using (var form = new AddDoctor() { StartPosition = FormStartPosition.CenterParent })
             {
                 if (form.ShowDialog(this) == DialogResult.OK && form.NewDoctor != null)
                 {
-                    _db.Doctors.Add(form.NewDoctor);
-                    SaveData();
+                    if (form.NewDoctor.IsValid())
+                    {
+                        _db.Doctors.Add(form.NewDoctor);
+                        SaveData();
+                    }
                 }
             }
         }
@@ -77,8 +82,11 @@ namespace HospitalSystemFix
             {
                 if (form.ShowDialog(this) == DialogResult.OK && form.NewPatient != null)
                 {
-                    _db.Patients.Add(form.NewPatient);
-                    SaveData();
+                    if (form.NewPatient.IsValid())
+                    {
+                        _db.Patients.Add(form.NewPatient);
+                        SaveData();
+                    }
                 }
             }
         }
@@ -87,24 +95,23 @@ namespace HospitalSystemFix
         {
             if (DoctorList.SelectedItems.Count == 0 || PatientList.SelectedItems.Count == 0)
             {
-                new MaterialSnackBar("Оберіть і лікаря, і пацієнта для зв'язку!", "ОК", true).Show(this);
+                new MaterialSnackBar("Select both doctor and patient to link!", "OK", true).Show(this);
                 return;
             }
 
             var doc = (Doctor)DoctorList.SelectedItems[0].Tag;
             var pat = (HospitalPatient)PatientList.SelectedItems[0].Tag;
 
-            if (doc.Patients.Any(p => p.Id == pat.Id))
+            if (doc.HasPatient(pat.Id))
             {
-                new MaterialSnackBar("Цей зв'язок вже існує!", "ОК", true).Show(this);
+                new MaterialSnackBar("This link already exists!", "OK", true).Show(this);
                 return;
             }
 
-            doc.Patients.Add(pat);
-            pat.Doctors.Add(doc);
+            _db.AddLink(doc, pat);
 
             SaveData();
-            new MaterialSnackBar("Успішно пов'язано!", "ОК", true).Show(this);
+            new MaterialSnackBar("Successfully linked!", "OK", true).Show(this);
         }
 
         private void ViewPatientsByDoctor(object? sender, EventArgs e)
@@ -112,11 +119,11 @@ namespace HospitalSystemFix
             if (DoctorList.SelectedItems.Count > 0)
             {
                 int selectedIndex = DoctorList.SelectedIndices[0];
-                Doctor doc = _db[selectedIndex];
+                Doctor doc = _db[selectedIndex]; 
 
                 RefreshUI(_db.Doctors, doc.Patients);
             }
-            else new MaterialSnackBar("Оберіть лікаря!", "ОК", true).Show(this);
+            else new MaterialSnackBar("Select a doctor!", "OK", true).Show(this);
         }
 
         private void ViewDoctorsByPatient(object? sender, EventArgs e)
@@ -125,7 +132,7 @@ namespace HospitalSystemFix
             {
                 RefreshUI(pat.Doctors, _db.Patients);
             }
-            else new MaterialSnackBar("Оберіть пацієнта!", "ОК", true).Show(this);
+            else new MaterialSnackBar("Select a patient!", "OK", true).Show(this);
         }
 
         private void ResetLists_Click(object? sender, EventArgs e)
@@ -138,13 +145,13 @@ namespace HospitalSystemFix
             DoctorList.Items.Clear();
             foreach (var doc in docs)
             {
-                DoctorList.Items.Add(new ListViewItem(doc.FullName) { Tag = doc });
+                DoctorList.Items.Add(new ListViewItem(doc.GetShortSummary()) { Tag = doc });
             }
 
             PatientList.Items.Clear();
             foreach (var pat in pats)
             {
-                PatientList.Items.Add(new ListViewItem(pat.FullName) { Tag = pat });
+                PatientList.Items.Add(new ListViewItem(pat.GetShortSummary()) { Tag = pat });
             }
         }
 
@@ -171,6 +178,7 @@ namespace HospitalSystemFix
 
             RefreshUI(_db.Doctors, _db.Patients);
         }
+
         private void DeleteButton_Click(object? sender, EventArgs e)
         {
             bool isDeleted = false;
@@ -179,9 +187,9 @@ namespace HospitalSystemFix
             {
                 var selectedDoctor = (Doctor)DoctorList.SelectedItems[0].Tag;
 
-                foreach (var patient in _db.Patients)
+                foreach (var patient in _db.Patients.ToList())
                 {
-                    patient.Doctors.RemoveAll(d => d.Id == selectedDoctor.Id);
+                    _db.RemoveLink(selectedDoctor, patient);
                 }
 
                 _db.Doctors.Remove(selectedDoctor);
@@ -192,13 +200,9 @@ namespace HospitalSystemFix
             {
                 var selectedPatient = (HospitalPatient)PatientList.SelectedItems[0].Tag;
 
-                foreach (var doctor in _db.Doctors)
+                foreach (var doctor in _db.Doctors.ToList())
                 {
-                    doctor.Patients.RemoveAll(p => p.Id == selectedPatient.Id);
-                }
-                foreach (var doctor in _db.Doctors)
-                {
-                    doctor.Patients.RemoveAll(p => p.Id == selectedPatient.Id);
+                    _db.RemoveLink(doctor, selectedPatient);
                 }
 
                 _db.Patients.Remove(selectedPatient);
@@ -208,11 +212,11 @@ namespace HospitalSystemFix
             if (isDeleted)
             {
                 SaveData();
-                new MaterialSnackBar("Успішно видалено!", "ОК", true).Show(this);
+                new MaterialSnackBar("Successfully deleted!", "OK", true).Show(this);
             }
             else
             {
-                new MaterialSnackBar("Оберіть лікаря або пацієнта для видалення!", "ОК", true).Show(this);
+                new MaterialSnackBar("Select a doctor or patient to delete!", "OK", true).Show(this);
             }
         }
     }

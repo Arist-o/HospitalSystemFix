@@ -53,7 +53,7 @@
             btnOpenAddDoctor.NoAccentTextColor = Color.Empty;
             btnOpenAddDoctor.Size = new Size(155, 36);
             btnOpenAddDoctor.TabIndex = 0;
-            btnOpenAddDoctor.Text = "додати доктора";
+            btnOpenAddDoctor.Text = "Add Doctor";
             btnOpenAddDoctor.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             btnOpenAddDoctor.UseAccentColor = false;
             btnOpenAddDoctor.UseVisualStyleBackColor = true;
@@ -73,7 +73,7 @@
             btnOpenAddPatient.NoAccentTextColor = Color.Empty;
             btnOpenAddPatient.Size = new Size(161, 36);
             btnOpenAddPatient.TabIndex = 1;
-            btnOpenAddPatient.Text = "додати пацієнта";
+            btnOpenAddPatient.Text = "Add Patient";
             btnOpenAddPatient.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             btnOpenAddPatient.UseAccentColor = false;
             btnOpenAddPatient.UseVisualStyleBackColor = true;
@@ -93,7 +93,7 @@
             viewAllDoctorsPatientButton.NoAccentTextColor = Color.Empty;
             viewAllDoctorsPatientButton.Size = new Size(254, 36);
             viewAllDoctorsPatientButton.TabIndex = 4;
-            viewAllDoctorsPatientButton.Text = "показати пацієнтів доктора";
+            viewAllDoctorsPatientButton.Text = "Show patient doctor";
             viewAllDoctorsPatientButton.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             viewAllDoctorsPatientButton.UseAccentColor = false;
             viewAllDoctorsPatientButton.UseVisualStyleBackColor = true;
@@ -112,7 +112,7 @@
             viewAllPatientDoctorsButton.NoAccentTextColor = Color.Empty;
             viewAllPatientDoctorsButton.Size = new Size(254, 36);
             viewAllPatientDoctorsButton.TabIndex = 5;
-            viewAllPatientDoctorsButton.Text = "показати докторів пацієнта";
+            viewAllPatientDoctorsButton.Text = "show doctor`s patient";
             viewAllPatientDoctorsButton.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             viewAllPatientDoctorsButton.UseAccentColor = false;
             viewAllPatientDoctorsButton.UseVisualStyleBackColor = true;
@@ -131,7 +131,7 @@
             ResetLists.NoAccentTextColor = Color.Empty;
             ResetLists.Size = new Size(158, 36);
             ResetLists.TabIndex = 6;
-            ResetLists.Text = "скинути фільтри";
+            ResetLists.Text = "unload filters";
             ResetLists.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             ResetLists.UseAccentColor = false;
             ResetLists.UseVisualStyleBackColor = true;
@@ -186,7 +186,7 @@
             ConnectButton.NoAccentTextColor = Color.Empty;
             ConnectButton.Size = new Size(103, 36);
             ConnectButton.TabIndex = 7;
-            ConnectButton.Text = "поєднати";
+            ConnectButton.Text = "Connect";
             ConnectButton.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             ConnectButton.UseAccentColor = false;
             ConnectButton.UseVisualStyleBackColor = true;
@@ -205,7 +205,7 @@
             DeleteButton.NoAccentTextColor = Color.Empty;
             DeleteButton.Size = new Size(158, 36);
             DeleteButton.TabIndex = 8;
-            DeleteButton.Text = "Видалити";
+            DeleteButton.Text = "Delete";
             DeleteButton.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             DeleteButton.UseAccentColor = false;
             DeleteButton.UseVisualStyleBackColor = true;

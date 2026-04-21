@@ -63,7 +63,7 @@
             btnAddDoctor.NoAccentTextColor = Color.Empty;
             btnAddDoctor.Size = new Size(161, 36);
             btnAddDoctor.TabIndex = 2;
-            btnAddDoctor.Text = "Додати пацієнта";
+            btnAddDoctor.Text = "Add Patient";
             btnAddDoctor.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
             btnAddDoctor.UseAccentColor = false;
             btnAddDoctor.UseVisualStyleBackColor = true;

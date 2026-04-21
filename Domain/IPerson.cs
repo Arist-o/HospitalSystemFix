@@ -8,5 +8,7 @@ namespace Domain
     public interface IPerson
     {
         string GetRoleInfo();
+        string GetShortSummary();
+        bool IsValid();
     }
 }
