@@ -36,6 +36,7 @@
             PatientList = new MaterialSkin.Controls.MaterialListView();
             DoctorList = new MaterialSkin.Controls.MaterialListView();
             ConnectButton = new MaterialSkin.Controls.MaterialButton();
+            DeleteButton = new MaterialSkin.Controls.MaterialButton();
             SuspendLayout();
             // 
             // btnOpenAddDoctor
@@ -123,7 +124,7 @@
             ResetLists.Depth = 0;
             ResetLists.HighEmphasis = true;
             ResetLists.Icon = null;
-            ResetLists.Location = new Point(549, 330);
+            ResetLists.Location = new Point(584, 335);
             ResetLists.Margin = new Padding(4, 6, 4, 6);
             ResetLists.MouseState = MaterialSkin.MouseState.HOVER;
             ResetLists.Name = "ResetLists";
@@ -178,7 +179,7 @@
             ConnectButton.Depth = 0;
             ConnectButton.HighEmphasis = true;
             ConnectButton.Icon = null;
-            ConnectButton.Location = new Point(408, 330);
+            ConnectButton.Location = new Point(443, 335);
             ConnectButton.Margin = new Padding(4, 6, 4, 6);
             ConnectButton.MouseState = MaterialSkin.MouseState.HOVER;
             ConnectButton.Name = "ConnectButton";
@@ -190,11 +191,31 @@
             ConnectButton.UseAccentColor = false;
             ConnectButton.UseVisualStyleBackColor = true;
             // 
+            // DeleteButton
+            // 
+            DeleteButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            DeleteButton.Density = MaterialSkin.Controls.MaterialButton.MaterialButtonDensity.Default;
+            DeleteButton.Depth = 0;
+            DeleteButton.HighEmphasis = true;
+            DeleteButton.Icon = null;
+            DeleteButton.Location = new Point(264, 335);
+            DeleteButton.Margin = new Padding(4, 6, 4, 6);
+            DeleteButton.MouseState = MaterialSkin.MouseState.HOVER;
+            DeleteButton.Name = "DeleteButton";
+            DeleteButton.NoAccentTextColor = Color.Empty;
+            DeleteButton.Size = new Size(158, 36);
+            DeleteButton.TabIndex = 8;
+            DeleteButton.Text = "Видалити";
+            DeleteButton.Type = MaterialSkin.Controls.MaterialButton.MaterialButtonType.Contained;
+            DeleteButton.UseAccentColor = false;
+            DeleteButton.UseVisualStyleBackColor = true;
+            // 
             // MainPage
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(DeleteButton);
             Controls.Add(ConnectButton);
             Controls.Add(ResetLists);
             Controls.Add(viewAllPatientDoctorsButton);
@@ -219,5 +240,6 @@
         private MaterialSkin.Controls.MaterialListView PatientList;
         private MaterialSkin.Controls.MaterialListView DoctorList;
         private MaterialSkin.Controls.MaterialButton ConnectButton;
+        private MaterialSkin.Controls.MaterialButton DeleteButton;
     }
 }

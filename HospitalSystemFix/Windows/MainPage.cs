@@ -12,10 +12,11 @@ using System.Windows.Forms;
 
 namespace HospitalSystemFix
 {
+    public delegate void UiUpdateHandler();
+
     public partial class MainPage : MaterialForm
     {
-        private List<Doctor> _doctors = new();
-        private List<HospitalPatient> _patients = new();
+        private HospitalDatabase _db = new HospitalDatabase();
 
         private readonly string _dbFilePath = "hospital_data.json";
         private readonly JsonSerializerOptions _jsonOptions;
@@ -38,24 +39,34 @@ namespace HospitalSystemFix
             DoctorList.Columns.Add("ПІБ Лікаря", 200);
             PatientList.Columns.Add("ПІБ Пацієнта", 200);
 
-            viewAllDoctorsPatientButton.Click += ViewPatientsByDoctor;
-            viewAllPatientDoctorsButton.Click += ViewDoctorsByPatient;
-            ResetLists.Click += (s, e) => RefreshUI(_doctors, _patients);
+            EventHandler viewPatientsDel = new EventHandler(ViewPatientsByDoctor);
+            EventHandler viewDoctorsDel = new EventHandler(ViewDoctorsByPatient);
+            EventHandler connectDel = new EventHandler(ConnectButton_Click);
+            EventHandler resetDel = new EventHandler(ResetLists_Click);
+            EventHandler exampleDelegat = new EventHandler(exampleDelegateSnackBar);
+            EventHandler deleteDel = new EventHandler(DeleteButton_Click);
 
-            ConnectButton.Click += ConnectButton_Click;
-
+            DeleteButton.Click += deleteDel;
+            viewAllDoctorsPatientButton.Click += viewPatientsDel;
+            viewAllPatientDoctorsButton.Click += viewDoctorsDel;
+            ConnectButton.Click += connectDel;
+            ResetLists.Click += resetDel;
+            ResetLists.Click += exampleDelegat;
+            
             LoadData();
         }
-
-    
+        private void exampleDelegateSnackBar(object? sender, EventArgs e)
+        {
+            new MaterialSnackBar("Тестуємо", "ОК", true).Show(this);
+        }
         private void btnOpenAddDoctor_Click(object? sender, EventArgs e)
         {
             using (var form = new AddDoctor() { StartPosition = FormStartPosition.CenterParent })
             {
                 if (form.ShowDialog(this) == DialogResult.OK && form.NewDoctor != null)
                 {
-                    _doctors.Add(form.NewDoctor);
-                    SaveData(); 
+                    _db.Doctors.Add(form.NewDoctor);
+                    SaveData();
                 }
             }
         }
@@ -66,14 +77,13 @@ namespace HospitalSystemFix
             {
                 if (form.ShowDialog(this) == DialogResult.OK && form.NewPatient != null)
                 {
-                    _patients.Add(form.NewPatient);
+                    _db.Patients.Add(form.NewPatient);
                     SaveData();
                 }
             }
         }
 
-     
-       private void ConnectButton_Click(object? sender, EventArgs e)
+        private void ConnectButton_Click(object? sender, EventArgs e)
         {
             if (DoctorList.SelectedItems.Count == 0 || PatientList.SelectedItems.Count == 0)
             {
@@ -97,12 +107,14 @@ namespace HospitalSystemFix
             new MaterialSnackBar("Успішно пов'язано!", "ОК", true).Show(this);
         }
 
-        
         private void ViewPatientsByDoctor(object? sender, EventArgs e)
         {
-            if (DoctorList.SelectedItems.Count > 0 && DoctorList.SelectedItems[0].Tag is Doctor doc)
+            if (DoctorList.SelectedItems.Count > 0)
             {
-                RefreshUI(_doctors, doc.Patients);
+                int selectedIndex = DoctorList.SelectedIndices[0];
+                Doctor doc = _db[selectedIndex];
+
+                RefreshUI(_db.Doctors, doc.Patients);
             }
             else new MaterialSnackBar("Оберіть лікаря!", "ОК", true).Show(this);
         }
@@ -111,12 +123,16 @@ namespace HospitalSystemFix
         {
             if (PatientList.SelectedItems.Count > 0 && PatientList.SelectedItems[0].Tag is HospitalPatient pat)
             {
-                RefreshUI(pat.Doctors, _patients);
+                RefreshUI(pat.Doctors, _db.Patients);
             }
             else new MaterialSnackBar("Оберіть пацієнта!", "ОК", true).Show(this);
         }
 
-    
+        private void ResetLists_Click(object? sender, EventArgs e)
+        {
+            RefreshUI(_db.Doctors, _db.Patients);
+        }
+
         private void RefreshUI(IEnumerable<Doctor> docs, IEnumerable<HospitalPatient> pats)
         {
             DoctorList.Items.Clear();
@@ -134,10 +150,9 @@ namespace HospitalSystemFix
 
         private void SaveData()
         {
-            RefreshUI(_doctors, _patients);
+            RefreshUI(_db.Doctors, _db.Patients);
 
-            var db = new HospitalDatabase { Doctors = _doctors, Patients = _patients };
-            string json = JsonSerializer.Serialize(db, _jsonOptions);
+            string json = JsonSerializer.Serialize(_db, _jsonOptions);
             File.WriteAllText(_dbFilePath, json);
         }
 
@@ -146,16 +161,59 @@ namespace HospitalSystemFix
             if (File.Exists(_dbFilePath))
             {
                 string json = File.ReadAllText(_dbFilePath);
-                var db = JsonSerializer.Deserialize<HospitalDatabase>(json, _jsonOptions);
+                var loadedDb = JsonSerializer.Deserialize<HospitalDatabase>(json, _jsonOptions);
 
-                if (db != null)
+                if (loadedDb != null)
                 {
-                    _doctors = db.Doctors ?? new List<Doctor>();
-                    _patients = db.Patients ?? new List<HospitalPatient>();
+                    _db = loadedDb;
                 }
             }
 
-            RefreshUI(_doctors, _patients); 
+            RefreshUI(_db.Doctors, _db.Patients);
+        }
+        private void DeleteButton_Click(object? sender, EventArgs e)
+        {
+            bool isDeleted = false;
+
+            if (DoctorList.SelectedItems.Count > 0)
+            {
+                var selectedDoctor = (Doctor)DoctorList.SelectedItems[0].Tag;
+
+                foreach (var patient in _db.Patients)
+                {
+                    patient.Doctors.RemoveAll(d => d.Id == selectedDoctor.Id);
+                }
+
+                _db.Doctors.Remove(selectedDoctor);
+                isDeleted = true;
+            }
+
+            if (PatientList.SelectedItems.Count > 0)
+            {
+                var selectedPatient = (HospitalPatient)PatientList.SelectedItems[0].Tag;
+
+                foreach (var doctor in _db.Doctors)
+                {
+                    doctor.Patients.RemoveAll(p => p.Id == selectedPatient.Id);
+                }
+                foreach (var doctor in _db.Doctors)
+                {
+                    doctor.Patients.RemoveAll(p => p.Id == selectedPatient.Id);
+                }
+
+                _db.Patients.Remove(selectedPatient);
+                isDeleted = true;
+            }
+
+            if (isDeleted)
+            {
+                SaveData();
+                new MaterialSnackBar("Успішно видалено!", "ОК", true).Show(this);
+            }
+            else
+            {
+                new MaterialSnackBar("Оберіть лікаря або пацієнта для видалення!", "ОК", true).Show(this);
+            }
         }
     }
 }
