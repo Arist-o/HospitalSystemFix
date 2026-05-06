@@ -1,4 +1,6 @@
 using Domain;
+using HospitalSystemFix.Core;
+using HospitalSystemFix.Utils;
 using HospitalSystemFix.Windows;
 using MaterialSkin;
 using MaterialSkin.Controls;
@@ -17,6 +19,8 @@ namespace HospitalSystemFix
     public partial class MainPage : MaterialForm
     {
         private HospitalDatabase _db = new HospitalDatabase();
+        private readonly IRepository<Doctor> _doctorRepo;
+        private readonly IRepository<HospitalPatient> _patientRepo;
 
         private readonly string _dbFilePath = "hospital_data.json";
         private readonly JsonSerializerOptions _jsonOptions;
@@ -30,6 +34,9 @@ namespace HospitalSystemFix
                 WriteIndented = true,
                 ReferenceHandler = ReferenceHandler.Preserve
             };
+
+            _doctorRepo = new LocalRepository<Doctor>(_db.Doctors);
+            _patientRepo = new LocalRepository<HospitalPatient>(_db.Patients);
 
             var materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
@@ -69,7 +76,7 @@ namespace HospitalSystemFix
                 {
                     if (form.NewDoctor.IsValid())
                     {
-                        _db.Doctors.Add(form.NewDoctor);
+                        _doctorRepo.Add(form.NewDoctor);
                         SaveData();
                     }
                 }
@@ -84,7 +91,7 @@ namespace HospitalSystemFix
                 {
                     if (form.NewPatient.IsValid())
                     {
-                        _db.Patients.Add(form.NewPatient);
+                        _patientRepo.Add(form.NewPatient);
                         SaveData();
                     }
                 }
@@ -142,16 +149,19 @@ namespace HospitalSystemFix
 
         private void RefreshUI(IEnumerable<Doctor> docs, IEnumerable<HospitalPatient> pats)
         {
-            DoctorList.Items.Clear();
-            foreach (var doc in docs)
-            {
-                DoctorList.Items.Add(new ListViewItem(doc.GetShortSummary()) { Tag = doc });
-            }
+            UiHelper.PopulateListView(DoctorList, docs, d => d.FullName);
+            UiHelper.PopulateListView(PatientList, pats, p => p.FullName);
+        }
 
-            PatientList.Items.Clear();
-            foreach (var pat in pats)
+        private void ExecuteOnSelected<T>(ListView listView, Action<T> action) where T : class
+        {
+            if (listView.SelectedItems.Count > 0 && listView.SelectedItems[0].Tag is T item)
             {
-                PatientList.Items.Add(new ListViewItem(pat.GetShortSummary()) { Tag = pat });
+                action(item);
+            }
+            else
+            {
+                new MaterialSnackBar($"Select an item in {listView.Name}!", "OK", true).Show(this);
             }
         }
 
@@ -173,50 +183,37 @@ namespace HospitalSystemFix
                 if (loadedDb != null)
                 {
                     _db = loadedDb;
+                    // Re-initialize repositories with new data
+                    ((LocalRepository<Doctor>)_doctorRepo).SetData(_db.Doctors);
+                    ((LocalRepository<HospitalPatient>)_patientRepo).SetData(_db.Patients);
                 }
             }
 
-            RefreshUI(_db.Doctors, _db.Patients);
+            RefreshUI(_doctorRepo.GetAll(), _patientRepo.GetAll());
         }
 
         private void DeleteButton_Click(object? sender, EventArgs e)
         {
             bool isDeleted = false;
 
-            if (DoctorList.SelectedItems.Count > 0)
+            ExecuteOnSelected<Doctor>(DoctorList, doc =>
             {
-                var selectedDoctor = (Doctor)DoctorList.SelectedItems[0].Tag;
-
-                foreach (var patient in _db.Patients.ToList())
-                {
-                    _db.RemoveLink(selectedDoctor, patient);
-                }
-
-                _db.Doctors.Remove(selectedDoctor);
+                _db.Patients.ToList().ForEach(p => _db.RemoveLink(doc, p));
+                _doctorRepo.Remove(doc);
                 isDeleted = true;
-            }
+            });
 
-            if (PatientList.SelectedItems.Count > 0)
+            ExecuteOnSelected<HospitalPatient>(PatientList, pat =>
             {
-                var selectedPatient = (HospitalPatient)PatientList.SelectedItems[0].Tag;
-
-                foreach (var doctor in _db.Doctors.ToList())
-                {
-                    _db.RemoveLink(doctor, selectedPatient);
-                }
-
-                _db.Patients.Remove(selectedPatient);
+                _db.Doctors.ToList().ForEach(d => _db.RemoveLink(d, pat));
+                _patientRepo.Remove(pat);
                 isDeleted = true;
-            }
+            });
 
             if (isDeleted)
             {
                 SaveData();
                 new MaterialSnackBar("Successfully deleted!", "OK", true).Show(this);
-            }
-            else
-            {
-                new MaterialSnackBar("Select a doctor or patient to delete!", "OK", true).Show(this);
             }
         }
     }
